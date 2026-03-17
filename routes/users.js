@@ -109,5 +109,41 @@ router.post('/changepassword', CheckLogin, async function(req,res){
     }
 
 })
+router.post("/changepassword", CheckLogin, async function (req, res) {
 
+  try {
+
+    let { oldpassword, newpassword } = req.body;
+
+    // kiểm tra dữ liệu
+    if (!oldpassword || !newpassword) {
+      return res.status(400).send("missing oldpassword or newpassword");
+    }
+
+    // validate new password
+    if (newpassword.length < 6) {
+      return res.status(400).send("newpassword must be at least 6 characters");
+    }
+
+    // user đã login từ middleware
+    let user = req.user;
+
+    // kiểm tra old password
+    let check = await userController.CompareLogin(user, oldpassword);
+
+    if (!check) {
+      return res.status(403).send("oldpassword incorrect");
+    }
+
+    // đổi password
+    user.password = newpassword;
+    await user.save();
+
+    res.send("change password success");
+
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+
+});
 module.exports = router;
